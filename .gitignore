@@ -1,0 +1,54 @@
+# ==============================================================================
+# BriefWise — Git Ignore Configuration
+# ==============================================================================
+
+# Python bytecode and runtime caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook checkpoints and scratch scripts
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+scratch/
+
+# Large model weights and training checkpoints (>100 MB GitHub limit)
+# Note: briefwise_final/model.safetensors is ~242 MB and must be stored separately.
+# The tokenizer and configuration files in briefwise_final/ remain tracked.
+*.safetensors
+*.pt
+*.pth
+*.bin
+
+# Training runs and hyperparameter search artifacts (>7 GB total)
+briefwise_checkpoints/
+briefwise_optuna/
+briefwise_final/checkpoint-*/
+
+# Operating system and editor metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# External reference documents
+README_sentify.md
+
+# Optional: SAMSum dataset CSV files (~10.4 MB total)
+# Uncomment the lines below if you prefer downloading the dataset via script
+# rather than tracking the CSV files directly in Git.
+# samsum-train.csv
+# samsum-validation.csv
+# samsum-test.csv

@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "evaluation_timestamp": "2026-10-24T17:05:25Z",
+    "evaluation_duration_seconds": 283.6,
+    "device": "cuda",
+    "device_name": "NVIDIA GeForce RTX 5050 Laptop GPU",
+    "models": {
+      "baseline": "t5-small (pretrained)",
+      "finetuned": "./briefwise_final (Checkpoint 3000, Epoch 3)"
+    },
+    "generation_parameters": {
+      "task_prefix": "summarize: ",
+      "max_input_length": 512,
+      "max_new_tokens": 100,
+      "num_beams": 4,
+      "early_stopping": true,
+      "use_stemmer": true
+    }
+  },
+  "dataset_split_audit": {
+    "total_test_dialogues": 819,
+    "exact_overlapping_dialogues": 7,
+    "overlapping_test_indices": [
+      9,
+      163,
+      202,
+      372,
+      669,
+      729,
+      763
+    ],
+    "overlap_percentage": 0.8547,
+    "non_overlapping_test_dialogues": 812,
+    "non_overlapping_percentage": 99.1453
+  },
+  "full_test_evaluation_819": {
+    "description": "Evaluation over all 819 test samples (reproduces Cell 55 of text_summarizer_mine.ipynb)",
+    "sample_count": 819,
+    "baseline_t5_small": {
+      "ROUGE-1": 27.41,
+      "ROUGE-2": 7.62,
+      "ROUGE-L": 21.19
+    },
+    "finetuned_briefwise": {
+      "ROUGE-1": 46.91,
+      "ROUGE-2": 22.56,
+      "ROUGE-L": 38.5
+    },
+    "absolute_improvement": {
+      "ROUGE-1": 19.5,
+      "ROUGE-2": 14.94,
+      "ROUGE-L": 17.31
+    }
+  },
+  "non_overlapping_evaluation_812": {
+    "description": "Strictly held-out evaluation excluding the 7 overlapping dialogues",
+    "sample_count": 812,
+    "baseline_t5_small": {
+      "ROUGE-1": 27.51,
+      "ROUGE-2": 7.65,
+      "ROUGE-L": 21.24
+    },
+    "finetuned_briefwise": {
+      "ROUGE-1": 46.88,
+      "ROUGE-2": 22.51,
+      "ROUGE-L": 38.45
+    },
+    "absolute_improvement": {
+      "ROUGE-1": 19.37,
+      "ROUGE-2": 14.86,
+      "ROUGE-L": 17.21
+    }
+  },
+  "overlapping_subset_7": {
+    "description": "Evaluation exclusively on the 7 overlapping dialogues",
+    "sample_count": 7,
+    "baseline_t5_small": {
+      "ROUGE-1": 17.01,
+      "ROUGE-2": 3.93,
+      "ROUGE-L": 13.83
+    },
+    "finetuned_briefwise": {
+      "ROUGE-1": 54.31,
+      "ROUGE-2": 25.3,
+      "ROUGE-L": 42.84
+    }
+  }
+}

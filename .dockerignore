@@ -1,0 +1,18 @@
+# Docker ignore file for BriefWise
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.git/
+.gitignore
+.ipynb_checkpoints/
+text_summarizer_mine.ipynb
+text_summarizer.ipynb
+briefwise_checkpoints/
+briefwise_optuna/
+briefwise_final/checkpoint-*/
+samsum-train.csv
+samsum-validation.csv
+samsum-test.csv
+scratch/
+README*.md
