@@ -1,12 +1,35 @@
 # BriefWise: Dialogue Summarization with Fine-Tuned T5-Small
 
+[![Live Demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://briefwisesummary.streamlit.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717.svg?logo=github)](https://github.com/kaifbaig/BriefWise)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C.svg)](https://pytorch.org/)
-[![Hugging Face](https://img.shields.io/badge/Transformers-4.44%2B-yellow.svg)](https://huggingface.co/docs/transformers)
+[![Transformers](https://img.shields.io/badge/Transformers-4.44%2B-yellow.svg)](https://huggingface.co/docs/transformers)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg)](https://fastapi.tiangolo.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.35%2B-FF4B4B.svg)](https://streamlit.io/)
 [![Optuna](https://img.shields.io/badge/Optuna-3.0%2B-brightgreen.svg)](https://optuna.org/)
 
-An end-to-end Natural Language Processing (NLP) system fine-tuning Google's **T5-small** sequence-to-sequence model on the SAMSum corpus for multi-turn conversational dialogue summarization, served through a lightweight FastAPI backend and a responsive web interface.
+> 🚀 **Live Demo:** **[https://briefwisesummary.streamlit.app/](https://briefwisesummary.streamlit.app/)**  
+> *Experience the fine-tuned dialogue summarization model live in your web browser.*
+
+An end-to-end Natural Language Processing (NLP) system fine-tuning Google's **T5-small** sequence-to-sequence model on the SAMSum corpus for multi-turn conversational dialogue summarization. BriefWise synthesizes colloquial multi-speaker transcripts into concise, grammatically coherent third-person summaries. 
+
+The trained model weights (~242 MB) are stored separately from the GitHub source code to comply with repository size limits. The production application is publicly accessible on **Streamlit Community Cloud** (securely fetching model weights from authenticated private storage), complemented by a local **FastAPI** backend and responsive HTML frontend for offline development.
+
+---
+
+## Try BriefWise
+
+You can test BriefWise immediately without cloning the repository or downloading model weights:
+
+👉 **[Launch Live Demo on Streamlit Community Cloud](https://briefwisesummary.streamlit.app/)**
+
+### How to use the live demo:
+1. **Choose an Input:** Select one of the preset sample conversations (*Lunch Meeting Plan*, *Project Deadline Update*, or *Travel & Flight Coordination*) or paste your own multi-turn chat transcript into the dialogue box.
+2. **Generate Summary:** Click the **Summarize Conversation** button.
+3. **Inspect the Output:** The fine-tuned T5-small model synthesizes the conversation using 4-beam search, displays the third-person summary, computes word reduction statistics, and provides a one-click clipboard copy box.
+
+*(For developers who want to run the FastAPI backend, Docker container, or Streamlit interface locally, full setup steps are detailed in [Section 11: Installation & Local Execution](#11-installation--local-execution).)*
 
 ---
 
@@ -14,7 +37,7 @@ An end-to-end Natural Language Processing (NLP) system fine-tuning Google's **T5
 
 Conversational text fundamentally differs from standard expository prose (such as news articles or Wikipedia entries). Real-world dialogues consist of informal phrasing, abbreviations, turn-taking dynamics, incomplete sentences, and distributed context across multiple speakers. Standard pretrained language models often struggle to summarize conversational transcripts without domain-specific adaptation, frequently resorting to repeating raw quotes rather than synthesizing key decisions.
 
-**BriefWise** addresses this challenge by fine-tuning an encoder-decoder Transformer (**T5-small**) on realistic dialogue transcripts. The project covers the complete applied machine learning lifecycle: exploratory data analysis, memory-efficient sequence collation, Bayesian hyperparameter optimization using Optuna, quantitative ROUGE evaluation against a pretrained baseline, error analysis, and local web deployment.
+**BriefWise** addresses this challenge by fine-tuning an encoder-decoder Transformer (**T5-small**) on realistic dialogue transcripts. The project covers the complete applied machine learning lifecycle: exploratory data analysis, memory-efficient sequence collation, Bayesian hyperparameter optimization using Optuna, quantitative ROUGE evaluation against a pretrained baseline, error analysis, local web serving via FastAPI, and cloud deployment on Streamlit Community Cloud.
 
 ---
 
@@ -26,7 +49,7 @@ The primary objective of BriefWise is to develop a reliable, accessible, and viv
 2. **Methodological Rigor:** Upgrade from basic tutorial implementations by utilizing Hugging Face's `Seq2SeqTrainer`, dynamic batch padding via `DataCollatorForSeq2Seq`, and loss masking on padding tokens (`-100`).
 3. **Automated Hyperparameter Optimization:** Use Optuna to systematically explore learning rates, batch sizes, weight decay, and training epochs, evaluating candidates directly on validation ROUGE-L rather than training loss alone.
 4. **Controlled Evaluation:** Benchmark the fine-tuned model against the original pretrained baseline on a strictly held-out test split using identical beam search generation parameters.
-5. **Practical Deployment:** Package the final model into an interactive FastAPI web application that serves predictions to a responsive, accessible browser interface.
+5. **Practical Cloud & Local Deployment:** Deploy the model as an interactive cloud web application on Streamlit Community Cloud ([briefwisesummary.streamlit.app](https://briefwisesummary.streamlit.app/)) while maintaining a local FastAPI backend and responsive HTML interface.
 
 ---
 
@@ -82,7 +105,8 @@ flowchart TD
 
     subgraph S6["6. Application Deployment"]
         K --> N["FastAPI Backend (app.py)<br>Inference Mode, Beam Search k=4"]
-        N <--> O["Web UI (index.html)<br>Interactive Conversation Summarizer"]
+        N <--> O["Web UI (index.html)<br>Interactive Browser Interface"]
+        K --> P["Streamlit Cloud App (streamlit_app.py)<br>Live Demo: briefwisesummary.streamlit.app"]
     end
 ```
 
@@ -185,7 +209,9 @@ While ROUGE metrics show significant gains, manual inspection of generated summa
 
 ## 9. Web Application Architecture
 
-BriefWise includes a functional local web application connecting the trained model to an interactive browser interface:
+BriefWise provides two complementary interfaces: a high-performance **FastAPI** backend with a custom HTML/JS frontend, and a cloud-ready **Streamlit** application.
+
+### 9.1 FastAPI Web Application (`app.py` & `index.html`)
 
 ```
 [Browser UI: index.html]
@@ -196,7 +222,7 @@ BriefWise includes a functional local web application connecting the trained mod
   ├── Input Validation (Pydantic: 1 to 20,000 characters)
   ├── Text Cleaning (HTML stripping, whitespace normalization)
   ├── Task Prefix Injection ("summarize: ")
-  ├── Tokenization (T5Tokenizer: max_length=512, truncation=True)
+  ├── Tokenization (AutoTokenizer: max_length=512, truncation=True)
   ├── PyTorch Inference (torch.inference_mode, num_beams=4, max_new_tokens=100)
   └── Response Construction (JSON: {"summary": "..."})
         │
@@ -208,13 +234,13 @@ BriefWise includes a functional local web application connecting the trained mod
 - **Backend (`app.py`):** Built with FastAPI and Uvicorn. Model weights and tokenizer are loaded into memory once on server startup from `briefwise_final/`. The inference endpoint runs as a synchronous threadpool worker, preventing GPU/CPU blocking on the main asynchronous event loop.
 - **Frontend (`index.html`):** Implemented in pure HTML5, CSS3, and JavaScript without external runtime frameworks. Features client-side character counting, loading feedback, empty-state toggles, clear controls, and clipboard copy.
 
-### 9.2 Streamlit Web Application (`streamlit_app.py`)
+### 9.2 Streamlit Cloud Application (`streamlit_app.py`)
 
-In addition to the FastAPI backend, BriefWise includes a standalone **Streamlit application** (`streamlit_app.py`) optimized for interactive demonstration and deployment on **Streamlit Community Cloud**:
+The standalone **Streamlit application** (`streamlit_app.py`) powers the public web demo on **Streamlit Community Cloud** ([briefwisesummary.streamlit.app](https://briefwisesummary.streamlit.app/)):
 
 - **Dual Model Loading Pipeline:**
   - **Local Development:** When `briefwise_final/model.safetensors` exists on disk, the application automatically loads directly from the local filesystem without external network calls.
-  - **Cloud Deployment:** In cloud environments where weights are not committed to Git, the app automatically downloads the model from the private Hugging Face repository (`kaifbaig24/briefwise-t5-small`) using an authenticated read token retrieved securely from Streamlit secrets (`st.secrets["HF_TOKEN"]`) or the `HF_TOKEN` environment variable.
+  - **Cloud Deployment:** In cloud environments where weights are not committed to Git, the app automatically downloads the model from private model storage using an authenticated Hugging Face read token retrieved securely from Streamlit secrets (`st.secrets["HF_TOKEN"]`) or the `HF_TOKEN` environment variable. Real token values are never exposed or rendered.
 - **Resource Caching:** Wrapped with `@st.cache_resource` to guarantee that the ~60M parameter model and tokenizer load into memory exactly once per application container lifecycle.
 - **Interactive UI Elements:** Features multi-speaker sample conversation presets, client-side character counters, copyable output containers, compression reduction statistics, and explicit input validation (handling empty, whitespace-only, and >20,000-character inputs).
 
@@ -240,18 +266,12 @@ BriefWise/
 ├── briefwise_nonoverlap_predictions.csv # Verified per-dialogue test predictions (819 rows)
 ├── briefwise_nonoverlap_metrics.json    # Verified evaluation metrics (full, clean, and overlap splits)
 │
-├── briefwise_final/                 # Final exported model artifacts & training checkpoints
+├── briefwise_final/                 # Exported model configuration & tokenizer artifacts
 │   ├── config.json                  # T5-small model architecture configuration
 │   ├── generation_config.json       # Generation settings (beams, lengths)
 │   ├── tokenizer.json               # Fast tokenizer merges and vocabulary
-│   ├── tokenizer_config.json        # Tokenizer configuration
-│   ├── training_args.bin            # PyTorch training arguments binary
-│   ├── model.safetensors            # Fine-tuned model weights (~242 MB; stored separately)
-│   ├── checkpoint-2000/             # (Training snapshot) Epoch 2 intermediate checkpoint
-│   └── checkpoint-3000/             # (Training snapshot) Winning Epoch 3 checkpoint (source of exported model)
-│
-├── briefwise_checkpoints/           # (Training artifact) Preliminary exploration checkpoints (1000, 2000, 3000)
-├── briefwise_optuna/                # (Training artifact) Optuna hyperparameter trial outputs (run-0 through run-8)
+│   └── tokenizer_config.json        # Tokenizer configuration
+│                                    # Note: Model weights (~242 MB) are git-ignored and hosted separately
 │
 ├── samsum-train.csv                 # SAMSum training split (14,732 samples)
 ├── samsum-validation.csv            # SAMSum validation split (818 samples)
@@ -271,7 +291,7 @@ BriefWise/
 
 1. **Clone the repository:**
    ```bash
-   git clone <YOUR_REPOSITORY_URL>
+   git clone https://github.com/kaifbaig/BriefWise.git
    cd BriefWise
    ```
 
@@ -292,13 +312,18 @@ BriefWise/
    python -m pip install -r requirements.txt
    ```
 
-4. **Verify Model Weights Availability:**
-   Because `briefwise_final/model.safetensors` (~242 MB) exceeds GitHub's 100 MB per-file limit, ensure the model weight file is present in the `briefwise_final/` folder:
-   - If you trained locally using the notebook, `briefwise_final/model.safetensors` is already in place.
-   - If setting up on a fresh machine from Git, copy your exported `model.safetensors` into `./briefwise_final/`.
+4. **Model Weights Availability:**
+   Because `briefwise_final/model.safetensors` (~242 MB) exceeds GitHub's 100 MB per-file limit, model weight files are stored separately:
+   - **Local execution with existing weights:** If you trained locally using the notebook or exported artifacts, ensure `model.safetensors` is placed in `./briefwise_final/`.
+   - **Local execution with remote storage:** If running `streamlit_app.py` without local weights, copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and provide an authenticated Hugging Face read token to download the model dynamically.
 
-5. **Start the web server:**
-   - **Option A: Python CLI / Virtual Environment:**
+5. **Start the application:**
+   - **Option A: Streamlit Interactive Interface (Local):**
+     ```bash
+     streamlit run streamlit_app.py
+     ```
+     This opens the Streamlit application at `http://localhost:8501`.
+   - **Option B: FastAPI Backend & Web UI:**
      ```bash
      # Using uvicorn directly:
      python -m uvicorn app:app --host 127.0.0.1 --port 8000
@@ -306,60 +331,50 @@ BriefWise/
      # Or using the application entrypoint (reads $PORT and binds to 0.0.0.0):
      python app.py
      ```
-   - **Option B: Container Deployment (Docker):**
+   - **Option C: Container Deployment (Docker):**
      ```bash
      docker build -t briefwise .
      docker run -p 8000:8000 briefwise
      ```
-   - **Option C: Streamlit Interactive Interface (Local):**
-     ```bash
-     streamlit run streamlit_app.py
-     ```
-     This opens the Streamlit application at `http://localhost:8501`. If local weights are present in `briefwise_final/`, they will load automatically.
 
 6. **Open the application:**
    Navigate your web browser to:
    ```text
-   http://127.0.0.1:8000        # For FastAPI & HTML UI
-   http://localhost:8501        # For Streamlit Interface
+   https://briefwisesummary.streamlit.app/   # Live Cloud Deployment
+   http://localhost:8501                     # Local Streamlit Interface
+   http://127.0.0.1:8000                     # Local FastAPI & HTML UI
    ```
 
-### 11.3 Streamlit Community Cloud Deployment
+### 11.3 Streamlit Community Cloud Architecture & Setup
 
-BriefWise is pre-configured for direct one-click deployment to **Streamlit Community Cloud**:
+BriefWise is deployed live on **Streamlit Community Cloud**:
 
-1. **Push your repository to GitHub:**
-   Ensure `streamlit_app.py`, `requirements.txt`, and `.streamlit/secrets.toml.example` are pushed to your GitHub repository (`.streamlit/secrets.toml` and large model weight files remain safely ignored by `.gitignore`).
-2. **Create App on Streamlit Community Cloud:**
-   - Sign in to [share.streamlit.io](https://share.streamlit.io).
-   - Click **New app**.
-   - Select your repository (`BriefWise`), branch (`main`), and set the main file path to:
-     ```text
-     streamlit_app.py
-     ```
-3. **Configure Hugging Face Access Token:**
-   Because the fine-tuned model weights are stored in a **private Hugging Face repository** (`kaifbaig24/briefwise-t5-small`), an authenticated read token is required for the cloud environment:
-   - In the Streamlit deployment screen, expand **Advanced settings...** and open the **Secrets** section.
-   - Enter your Hugging Face read token:
-     ```toml
-     HF_TOKEN = "hf_your_read_token_here"
-     ```
-4. **Deploy:**
-   Click **Deploy!**. Streamlit Cloud will install the dependencies from `requirements.txt`, securely authenticate with Hugging Face using your token to retrieve the weights, cache the model via `@st.cache_resource`, and launch the web app.
+1. **Repository Link:** Linked to GitHub repository `kaifbaig/BriefWise` with entrypoint:
+   ```text
+   streamlit_app.py
+   ```
+2. **Secure Token Configuration:**
+   Because the fine-tuned model weights are stored in private cloud storage, the application accesses them using an authenticated Hugging Face read token configured securely in Streamlit Cloud Secrets:
+   ```toml
+   HF_TOKEN = "hf_your_read_token_here"
+   ```
+   *No token strings or secrets are stored in version control or exposed in application logs.*
+3. **Execution Lifecycle:**
+   On container startup, Streamlit Cloud installs `requirements.txt`, securely fetches the model weights into memory, caches the model with `@st.cache_resource`, and serves inference requests using beam search.
 
 ---
 
-## 12. Limitations & Future Improvements
+## 12. Limitations & Planned Improvements
 
 ### Current Limitations
-- **Model Size Constraints:** At ~60M parameters, T5-small offers excellent inference speed but has restricted reasoning depth compared to larger models (e.g., T5-base with 220M parameters or BART-large with 406M parameters).
+- **Model Size Constraints:** At ~60M parameters, T5-small offers rapid inference speed and modest memory consumption, but has restricted reasoning depth compared to larger models (e.g., T5-base with 220M parameters or BART-large with 406M parameters).
 - **Benchmark Cross-Split Overlap:** SAMSum contains intrinsic cross-split duplicates. Specifically, 7 of the 819 test dialogues (0.85%) were present in the 4,000-example training subset. While 99.15% of test dialogues are strictly novel, the full-test evaluation cannot claim complete independence without explicitly dropping these 7 samples prior to scoring.
 - **Whitespace Flattening:** Replacing newlines with spaces during text cleaning flattens speaker turn boundaries, making multi-speaker attribution harder for the model.
 - **Surface Metric Dependency:** ROUGE scores do not penalize factual contradictions if the overlapping vocabulary matches the reference text.
 
 ### Planned Improvements
 - **Cross-Split Deduplication Pipeline:** Incorporate strict inter-split deduplication before model training to eliminate cross-split overlap and ensure 100% independent evaluation partitions.
-- **Hugging Face Model Hub Integration:** Host model weights publicly on Hugging Face to enable automatic remote downloading upon first launch.
-- **Speaker Delimiter Preservation:** Maintain distinct speaker turn tokens (e.g., `" | "` or `\n`) during preprocessing to provide clear structural boundaries.
+- **Public Model Hub Distribution:** Host model weights in a public Hugging Face repository or GitHub Release to enable unauthenticated remote downloading.
+- **Speaker Delimiter Preservation:** Maintain distinct speaker turn tokens (e.g., `" | "` or `\n`) during preprocessing to provide clear structural boundaries for multi-speaker turns.
 - **Structured Factuality Evaluation:** Implement a rubric-based human factuality evaluation on the validation split assessing attribution accuracy, temporal consistency, and non-hallucination.
-- **Cloud Deployment:** Deploy the application container to a free-tier hosting platform such as Hugging Face Spaces.
+- **Containerized Cloud Scaling:** Deploy the FastAPI backend and Docker container to scalable cloud infrastructure (e.g., AWS ECS, Google Cloud Run, or Hugging Face Spaces with Docker).
