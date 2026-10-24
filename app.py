@@ -6,7 +6,7 @@ import torch
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+from transformers import AutoTokenizer, T5ForConditionalGeneration
 
 
 # Build paths relative to this file, so the app works from the project folder.
@@ -41,7 +41,7 @@ if not weights_file.is_file():
     )
 
 # Load the saved model and tokenizer once when the app starts.
-tokenizer = T5Tokenizer.from_pretrained(str(MODEL_DIR))
+tokenizer = AutoTokenizer.from_pretrained(str(MODEL_DIR))
 model = T5ForConditionalGeneration.from_pretrained(str(MODEL_DIR))
 model = model.to(DEVICE)
 model.eval()

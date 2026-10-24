@@ -208,6 +208,16 @@ BriefWise includes a functional local web application connecting the trained mod
 - **Backend (`app.py`):** Built with FastAPI and Uvicorn. Model weights and tokenizer are loaded into memory once on server startup from `briefwise_final/`. The inference endpoint runs as a synchronous threadpool worker, preventing GPU/CPU blocking on the main asynchronous event loop.
 - **Frontend (`index.html`):** Implemented in pure HTML5, CSS3, and JavaScript without external runtime frameworks. Features client-side character counting, loading feedback, empty-state toggles, clear controls, and clipboard copy.
 
+### 9.2 Streamlit Web Application (`streamlit_app.py`)
+
+In addition to the FastAPI backend, BriefWise includes a standalone **Streamlit application** (`streamlit_app.py`) optimized for interactive demonstration and deployment on **Streamlit Community Cloud**:
+
+- **Dual Model Loading Pipeline:**
+  - **Local Development:** When `briefwise_final/model.safetensors` exists on disk, the application automatically loads directly from the local filesystem without external network calls.
+  - **Cloud Deployment:** In cloud environments where weights are not committed to Git, the app automatically downloads the model from the private Hugging Face repository (`kaifbaig24/briefwise-t5-small`) using an authenticated read token retrieved securely from Streamlit secrets (`st.secrets["HF_TOKEN"]`) or the `HF_TOKEN` environment variable.
+- **Resource Caching:** Wrapped with `@st.cache_resource` to guarantee that the ~60M parameter model and tokenizer load into memory exactly once per application container lifecycle.
+- **Interactive UI Elements:** Features multi-speaker sample conversation presets, client-side character counters, copyable output containers, compression reduction statistics, and explicit input validation (handling empty, whitespace-only, and >20,000-character inputs).
+
 ---
 
 ## 10. Project Structure
@@ -216,12 +226,16 @@ BriefWise includes a functional local web application connecting the trained mod
 BriefWise/
 ├── app.py                           # FastAPI application serving web UI and /summarize/ endpoint
 ├── index.html                       # Responsive frontend interface
+├── streamlit_app.py                 # Streamlit web application (Local & Streamlit Cloud)
 ├── text_summarizer_mine.ipynb       # Machine learning pipeline (EDA, tuning, training, evaluation)
-├── requirements.txt                 # Application runtime dependencies
+├── requirements.txt                 # Application runtime dependencies (FastAPI + Streamlit)
 ├── Dockerfile                       # Production container deployment specification
 ├── .dockerignore                    # Build exclusion rules for clean Docker containers
 ├── .gitignore                       # Git exclusion rules for large weights, checkpoints, and caches
 ├── README.md                        # Project documentation
+│
+├── .streamlit/                      # Streamlit configuration directory
+│   └── secrets.toml.example         # Template for Hugging Face read token (secrets.toml is git-ignored)
 │
 ├── briefwise_nonoverlap_predictions.csv # Verified per-dialogue test predictions (819 rows)
 ├── briefwise_nonoverlap_metrics.json    # Verified evaluation metrics (full, clean, and overlap splits)
@@ -297,12 +311,41 @@ BriefWise/
      docker build -t briefwise .
      docker run -p 8000:8000 briefwise
      ```
+   - **Option C: Streamlit Interactive Interface (Local):**
+     ```bash
+     streamlit run streamlit_app.py
+     ```
+     This opens the Streamlit application at `http://localhost:8501`. If local weights are present in `briefwise_final/`, they will load automatically.
 
 6. **Open the application:**
    Navigate your web browser to:
    ```text
-   http://127.0.0.1:8000
+   http://127.0.0.1:8000        # For FastAPI & HTML UI
+   http://localhost:8501        # For Streamlit Interface
    ```
+
+### 11.3 Streamlit Community Cloud Deployment
+
+BriefWise is pre-configured for direct one-click deployment to **Streamlit Community Cloud**:
+
+1. **Push your repository to GitHub:**
+   Ensure `streamlit_app.py`, `requirements.txt`, and `.streamlit/secrets.toml.example` are pushed to your GitHub repository (`.streamlit/secrets.toml` and large model weight files remain safely ignored by `.gitignore`).
+2. **Create App on Streamlit Community Cloud:**
+   - Sign in to [share.streamlit.io](https://share.streamlit.io).
+   - Click **New app**.
+   - Select your repository (`BriefWise`), branch (`main`), and set the main file path to:
+     ```text
+     streamlit_app.py
+     ```
+3. **Configure Hugging Face Access Token:**
+   Because the fine-tuned model weights are stored in a **private Hugging Face repository** (`kaifbaig24/briefwise-t5-small`), an authenticated read token is required for the cloud environment:
+   - In the Streamlit deployment screen, expand **Advanced settings...** and open the **Secrets** section.
+   - Enter your Hugging Face read token:
+     ```toml
+     HF_TOKEN = "hf_your_read_token_here"
+     ```
+4. **Deploy:**
+   Click **Deploy!**. Streamlit Cloud will install the dependencies from `requirements.txt`, securely authenticate with Hugging Face using your token to retrieve the weights, cache the model via `@st.cache_resource`, and launch the web app.
 
 ---
 

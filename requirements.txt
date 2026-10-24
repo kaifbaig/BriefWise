@@ -1,12 +1,15 @@
 # BriefWise Web Application Dependencies
-# Minimal requirements to run the FastAPI backend and model inference
+# Supports both FastAPI backend and Streamlit Community Cloud deployment
 
-# Web framework and ASGI server
+# Web frameworks
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
 pydantic>=2.8.0
+streamlit>=1.35.0
 
 # Deep learning and NLP inference
 torch>=2.2.0
 transformers>=4.44.0
+tokenizers>=0.19.0
 sentencepiece>=0.2.0
+huggingface-hub>=0.23.0

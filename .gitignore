@@ -43,6 +43,10 @@ desktop.ini
 *.swp
 *.swo
 
+# Streamlit secrets and local runtime files
+.streamlit/secrets.toml
+.streamlit/credentials.toml
+
 # External reference documents
 README_sentify.md
 
